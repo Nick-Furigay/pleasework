@@ -10,18 +10,95 @@
 
     <script src="jquery-2.1.1.min.js"></script>
     <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-image: url("https://mcdn.wallpapersafari.com/medium/89/97/WwKIUd.jpg");
+        height: 100vh;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        width: 80%;
+        background-color: rgba(255, 255, 255, 0.7);
+      }
+
       #map {
-        position: absolute;
-        top: 30;
-        bottom: 30;
-        left: 150;
-        right: 150;
+        margin: 0px 20px;
+        height: 500px;
+        width: 700px;
+        border-radius: 10px;
+      }
+
+      .gif {
+        width: 700px;
+      }
+
+      section {
+        width: 100%;
+        height: 500px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-evenly;
+
+        box-shadow: 2px 5px 50% grey;
+      }
+
+      .new-icon {
+        background-color: green;
+        border-radius: 4px;
       }
     </style>
   </head>
 
   <body>
-    <div id="map"></div>
+    <main>
+      <h1>Something Something Denver</h1>
+      <h3>Maps!</h3>
+      <label for="years">Choose a year:</label>
+      <select id="years">
+        <option value="2006">2006</option>
+        <option value="2007">2007</option>
+        <option value="2008">2008</option>
+        <option value="2009">2009</option>
+        <option value="2010">2010</option>
+        <option value="2011">2011</option>
+        <option value="2012">2012</option>
+        <option value="2013">2013</option>
+        <option value="2014">2014</option>
+        <option value="2015">2015</option>
+        <option value="2016">2016</option>
+        <option value="2017">2017</option>
+        <option value="2018">2018</option>
+        <option value="2019">2019</option>
+      </select>
+      <h2>Title 1</h2>
+      <section class="text-right">
+        <div id="map"></div>
+        <p>Im on the right</p>
+      </section>
+      <h2>Title 2</h2>
+      <section class="text-left" style="height: 400px;">
+        <p>Decrsiption goes here</p>
+        <img class="gif" src="LEED_Buildings.gif" />
+      </section>
+      <h2>Title 3</h2>
+      <section class="text-right">
+        <img src="" alt="img" />
+        <p>Decrsiption goes here</p>
+      </section>
+      <h2>Title 4</h2>
+      <section class="text-left">
+        <p>im on the left</p>
+        <img src="" alt="img" />
+      </section>
+    </main>
+
     <script>
       var map = L.map("map").setView([39.7392, -104.9903], 13);
 
@@ -34,18 +111,108 @@
       $.getJSON("D2006GEO.geojson", function (data) {
         var LeedIcon = L.icon({
           iconUrl: "LEED-Certification-Logo-b-green.png",
-          iconSize: [20, 20],
+          iconSize: [12, 12],
         });
+
         // add GeoJSON layer to the map once the file is loaded
         L.geoJson(data, {
           pointToLayer: function (feature, latlng) {
             var marker = L.marker(latlng, { icon: LeedIcon });
             marker.bindPopup(
-              feature.properties.Match_addr + "<br/>" + "Date: 2006"
+              feature.properties.Match_addr +
+                "<br/>" +
+                `Date: ${
+                  feature.properties.CertDate
+                    ? feature.properties.CertDate
+                    : "Not Given"
+                }` +
+                "<br/>" +
+                `Registered: ${
+                  feature.properties.Registri
+                    ? feature.properties.Registri
+                    : "Not Given"
+                }` +
+                "<br/>" +
+                `Sqaure Footage: ${
+                  feature.properties.GrossSqFoo
+                    ? feature.properties.GrossSqFoo
+                    : "Not Given"
+                }` +
+                "<br/>" +
+                `Project Name: ${
+                  feature.properties.ProjectNam
+                    ? feature.properties.ProjectNam
+                    : "Not Given"
+                }`
             );
             return marker;
           },
         }).addTo(map);
+      });
+
+      $("#years").on("change", (elt) => {
+        date = elt.target.selectedOptions[0].value;
+
+        map.eachLayer(function (layer) {
+          if (layer.feature) {
+            map.removeLayer(layer);
+          }
+        });
+
+        $.getJSON(`D${date}GEO.geojson`, function (data) {
+          var LeedIcon = L.icon({
+            iconUrl: "LEED-Certification-Logo-b-green.png",
+            iconSize: [12, 12],
+          });
+
+          var newIcon = L.divIcon({
+            className: "new-icon",
+            iconSize: [8, 8],
+          });
+
+          // add GeoJSON layer to the map once the file is loaded
+          L.geoJson(data, {
+            pointToLayer: function (feature, latlng) {
+              let marker;
+              let regdate = feature.properties.Registrati;
+
+              if (regdate && regdate.slice(0, 4) == date) {
+                marker = L.marker(latlng, { icon: newIcon });
+              } else {
+                marker = L.marker(latlng, { icon: LeedIcon });
+              }
+
+              marker.bindPopup(
+                feature.properties.Match_addr +
+                  "<br/>" +
+                  `Date: ${
+                    feature.properties.CertDate
+                      ? feature.properties.CertDate
+                      : "Not Given"
+                  }` +
+                  "<br/>" +
+                  `Registered: ${
+                    feature.properties.Registrati
+                      ? feature.properties.Registrati
+                      : "Not Given"
+                  }` +
+                  "<br/>" +
+                  `Sqaure Footage: ${
+                    feature.properties.GrossSqFoo
+                      ? feature.properties.GrossSqFoo
+                      : "Not Given"
+                  }` +
+                  "<br/>" +
+                  `Project Name: ${
+                    feature.properties.ProjectNam
+                      ? feature.properties.ProjectNam
+                      : "Not Given"
+                  }`
+              );
+              return marker;
+            },
+          }).addTo(map);
+        });
       });
     </script>
   </body>
